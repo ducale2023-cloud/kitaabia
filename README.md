@@ -1,26 +1,15 @@
-# KITAABIA — Phase 5 Real Platform
+# KITAABIA
 
-Connected to the dedicated KITAABIA Supabase project.
+Read. Learn. Grow.
 
-## Features
-- Real Supabase Auth
-- Books + categories database
-- Admin role authorization
-- Admin cover/eBook upload
-- Public cover bucket + private eBook bucket
-- Signed eBook reader URLs
-- Personal library/favorites database
-- Reading activity heartbeat
-- Next.js App Router + Supabase SSR
+## V4 fixes
+- Login now redirects administrators to `/admin` and normal users to `/books`.
+- Admin page clearly reports when the signed-in account has no admin role.
+- TypeScript dependencies and Supabase SSR imports are included.
 
-## Setup
-1. Copy `.env.example` to `.env.local`.
-2. Put your Supabase publishable key in `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`.
-3. Run `npm install`.
-4. Run `npm run dev`.
-5. Create an account at `/signup`.
-6. Promote that account to admin using `scripts/promote-admin.sql`.
-7. Open `/admin` and upload your first book.
+## Environment variables
+NEXT_PUBLIC_SUPABASE_URL=https://uzpyfwavdwtkhcosqhrr.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 
-Only upload books you own, have permission to distribute, or that are public domain/licensed.
-Never put a Supabase secret/service key in `.env.local` for the browser.
+## Admin role
+The signed-in admin account must have a row in `public.user_roles` with `role = 'admin'`. Run `scripts/promote-admin.sql` in Supabase SQL Editor after the account exists.
