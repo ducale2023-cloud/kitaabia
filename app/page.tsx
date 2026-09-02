@@ -6,8 +6,8 @@ export default function Home() {
       <header className="top">
         <Link className="brand" href="/">KITAABIA<span>Read. Learn. Grow.</span></Link>
         <nav>
-          <Link href="/books">Books</Link>{" · "}
-          <Link href="/library">My Library</Link>{" · "}
+          <Link href="/books">Books</Link>
+          <Link href="/library">My Library</Link>
           <Link href="/login">Sign in</Link>
         </nav>
       </header>
