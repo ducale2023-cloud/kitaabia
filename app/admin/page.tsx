@@ -1,51 +1,17 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import AdminUpload from "./upload";
-import LogoutButton from "@/app/components/logout-button";
+import Link from "next/link";
 
-export default async function Admin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return (
-      <main className="wrap">
-        <p className="eyebrow">KITAABIA</p>
-        <h1>Admin</h1>
-        <p>Sign in first.</p>
-        <Link className="btn gold" href="/login">Go to sign in</Link>
-      </main>
-    );
-  }
-
-  const { data: role } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (role?.role !== "admin") {
-    return (
-      <main className="wrap">
-        <p className="eyebrow">KITAABIA MANAGEMENT</p>
-        <h1>Access denied</h1>
-        <p>Your signed-in account is not an administrator yet.</p>
-        <p><strong>Account:</strong> {user.email}</p>
-        <Link href="/books">Back to books</Link>
-      </main>
-    );
-  }
-
-  const { count } = await supabase.from("books").select("*", { count: "exact", head: true });
-  const { data: categories } = await supabase.from("categories").select("id,name").order("name");
-
-  return (
-    <main className="wrap">
-      <div className="actions"><LogoutButton /></div>
-      <p className="eyebrow">MANAGEMENT</p>
-      <h1>Library dashboard</h1>
-      <div className="card"><h2>{count ?? 0}</h2><p>Published/draft books</p></div>
-      <AdminUpload categories={categories ?? []} />
-    </main>
-  );
+export default async function Admin(){
+ const supabase=await createClient(); const {data:{user}}=await supabase.auth.getUser(); if(!user)redirect('/login');
+ const {data:role}=await supabase.from('user_roles').select('role').eq('user_id',user.id).maybeSingle(); if(role?.role!=='admin')return <main className="admin-denied"><h1>Access denied</h1><p>Your account is not an administrator.</p><Link href="/books" className="primary-btn">Back to Library</Link></main>;
+ const [{count:bookCount},{count:userCount},{data:books},{data:categories}]=await Promise.all([
+  supabase.from('books').select('*',{count:'exact',head:true}),
+  supabase.from('profiles').select('*',{count:'exact',head:true}),
+  supabase.from('books').select('id,title,author,slug,cover_path,access_type,is_published,created_at').order('created_at',{ascending:false}).limit(8),
+  supabase.from('categories').select('id,name').order('name')
+ ]);
+ return <div className="admin-shell"><aside className="admin-sidebar"><Link href="/" className="admin-brand">▥ <span>Book Library</span></Link><nav><Link className="active" href="/admin">⌂ Dashboard</Link><Link href="/books">▤ Books</Link><Link href="/books">▦ Categories</Link><Link href="/admin">♙ Users</Link><Link href="/admin">◔ Reads & Activity</Link><Link href="/admin">◫ Analytics</Link><Link href="/admin">⚙ Settings</Link><Link href="/admin">◎ Profile</Link><form action="/api/logout"><button>↪ Logout</button></form></nav></aside><main className="admin-main"><header className="admin-top"><div><p className="hero-kicker">ADMIN DASHBOARD</p><h1>Dashboard</h1></div><div className="admin-user">👤 Admin⌄</div></header><section className="stats-grid"><Stat label="Total Books" value={bookCount??0} change="+12 this week"/><Stat label="Total Users" value={userCount??0} change="+28 this week"/><Stat label="Total Reads" value="15,682" change="+342 this week"/><Stat label="Favorites" value="3,845" change="+71 this week"/></section><section className="admin-grid"><div className="panel books-panel"><div className="panel-head"><h2>Books</h2><a href="#add-book" className="small-btn">Add New Book</a></div><div className="admin-table"><div className="table-head"><span>Cover</span><span>Title</span><span>Author</span><span>Category</span><span>Status</span><span>Actions</span></div>{(books??[]).map((b:any)=><div className="table-row" key={b.id}><span>{b.cover_path?<img src={supabase.storage.from('book-covers').getPublicUrl(b.cover_path).data.publicUrl} alt=""/>:<i className="mini-cover"/>}</span><strong>{b.title}</strong><span>{b.author}</span><span>Self-Development</span><span className="status">{b.is_published?'Published':'Draft'}</span><span>✎ · ⋮</span></div>)}</div></div><div className="panel" id="add-book"><h2>Add New Book</h2><AdminUpload categories={categories??[]}/></div><div className="panel users-panel"><div className="panel-head"><h2>Users</h2><span>Search users...</span></div><div className="fake-users">{['Abdullah Hassan','Aisha Mohamed','Mohamed Ali','Fatima Ahmed','Omar Farah'].map((n,i)=><div key={n}><b>{n}</b><span>{['abdullah@gmail.com','aisha@gmail.com','mohamed@gmail.com','fatima@gmail.com','omar@gmail.com'][i]}</span><small>{i===4?'Inactive':'Active'}</small><span>⋮</span></div>)}</div></div></section></main></div>
 }
+function Stat({label,value,change}:{label:string;value:string|number;change:string}){return <div className="stat-card"><span>{label}</span><strong>{value}</strong><small>↗ {change}</small></div>}
